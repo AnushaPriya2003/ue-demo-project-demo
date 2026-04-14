@@ -12,6 +12,13 @@ import {
   loadCSS,
 } from './aem.js';
 
+// Load Universal Editor on .aem.page (preview) and localhost
+if (window.location.hostname.endsWith('.aem.page') || window.location.hostname === 'localhost') {
+  const script = document.createElement('script');
+  script.src = '/universal-editor-cors.js';
+  document.head.appendChild(script);
+}
+
 /**
  * Moves all the attributes from a given elmenet to another given element.
  * @param {Element} from the element to copy attributes from
