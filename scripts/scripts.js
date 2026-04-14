@@ -17,7 +17,42 @@ if (window.location.hostname.endsWith('.aem.page') || window.location.hostname =
   const script = document.createElement('script');
   script.src = '/universal-editor-cors.js';
   document.head.appendChild(script);
+
+  // Mock backend: intercept Universal Editor postMessage events and handle locally
+  // This allows UE editing to work without a real AEM JCR backend.
+  window.addEventListener('message', (event) => {
+    const { type, detail } = event.data || {};
+
+    // Handle content fetch — return current DOM value
+    if (type === 'ue:get') {
+      const { resource, prop } = detail || {};
+      const el = document.querySelector(`[data-aue-prop="${prop}"]`);
+      const value = el ? el.textContent : '';
+      event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data: { [prop]: value } }, '*');
+    }
+
+    // Handle content update — apply to DOM and confirm success
+    if (type === 'ue:patch' || type === 'aue:content:update') {
+      const { resource, prop, value, type: patchType, content } = detail || {};
+      const updates = content || [{ prop, value }];
+      updates.forEach(({ prop: p, value: v }) => {
+        const el = document.querySelector(`[data-aue-prop="${p}"]`);
+        if (el) {
+          if (el.tagName === 'IMG') el.src = v;
+          else el.textContent = v;
+        }
+      });
+      event.source?.postMessage({ type: 'ue:patch:response', id: event.data.id, status: 'ok' }, '*');
+      event.source?.postMessage({ type: 'aue:content:updated', detail: { resource, prop } }, '*');
+    }
+
+    // Handle connection check
+    if (type === 'ue:ping') {
+      event.source?.postMessage({ type: 'ue:pong', id: event.data.id }, '*');
+    }
+  });
 }
+
 
 /**
  * Moves all the attributes from a given elmenet to another given element.
