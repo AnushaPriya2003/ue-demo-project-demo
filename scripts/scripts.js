@@ -26,13 +26,29 @@ if (window.location.hostname.endsWith('.aem.page') || window.location.hostname =
     // Handle content fetch — return current DOM value or specific props
     if (type === 'ue:get') {
       const { resource, prop } = detail || {};
-      const el = document.querySelector(`[data-aue-resource="${resource}"] [data-aue-prop="${prop}"], [data-aue-prop="${prop}"]`);
-      let value = '';
-      if (el) {
-        if (el.tagName === 'IMG') value = el.src;
-        else value = el.textContent;
+      const data = {};
+      
+      if (prop) {
+        // Fetch specific property
+        const el = document.querySelector(`[data-aue-resource="${resource}"] [data-aue-prop="${prop}"], [data-aue-prop="${prop}"]`);
+        if (el) {
+          data[prop] = el.tagName === 'IMG' ? el.src : el.textContent;
+        }
+      } else {
+        // Fetch all properties for the resource
+        const root = document.querySelector(`[data-aue-resource="${resource}"]`);
+        if (root) {
+          const props = root.querySelectorAll('[data-aue-prop]');
+          props.forEach((el) => {
+            const p = el.getAttribute('data-aue-prop');
+            data[p] = el.tagName === 'IMG' ? el.src : el.textContent;
+          });
+          // Also check the root itself
+          const rootProp = root.getAttribute('data-aue-prop');
+          if (rootProp) data[rootProp] = root.tagName === 'IMG' ? root.src : root.textContent;
+        }
       }
-      event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data: { [prop]: value } }, '*');
+      event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data }, '*');
     }
 
     // Handle content update — apply to DOM and confirm success
@@ -52,12 +68,13 @@ if (window.location.hostname.endsWith('.aem.page') || window.location.hostname =
             const img = el.querySelector('img');
             if (img) img.src = v;
           } else {
-            el.textContent = v;
+            el.innerHTML = v; // Use innerHTML for richtext support
           }
         }
       });
       event.source?.postMessage({ type: 'ue:patch:response', id: event.data.id, status: 'ok' }, '*');
       event.source?.postMessage({ type: 'aue:content:updated', detail: { resource, prop } }, '*');
+    }
     }
 
     // Handle connection check
