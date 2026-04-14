@@ -3,7 +3,7 @@ import { moveInstrumentation } from '../../scripts/scripts.js';
 
 export default function decorate(block) {
   // --- Universal Editor instrumentation ---
-  block.setAttribute('data-aue-resource', 'urn:aemconnection:/content/ue-demo/en/home/jcr:content/root/cards');
+  block.setAttribute('data-aue-resource', 'urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/cards');
   block.setAttribute('data-aue-type', 'component');
   block.setAttribute('data-aue-label', 'Cards');
 
