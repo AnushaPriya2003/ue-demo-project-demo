@@ -15,6 +15,7 @@ export default function decorate(block) {
       const itemResource = `urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/columns/item${rowIndex}_${colIndex}`;
       col.setAttribute('data-aue-resource', itemResource);
       col.setAttribute('data-aue-type', 'component');
+      col.setAttribute('data-aue-model', 'columns');
       col.setAttribute('data-aue-label', `Column ${colIndex + 1}`);
 
       const pic = col.querySelector('picture');

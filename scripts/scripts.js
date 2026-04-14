@@ -28,6 +28,13 @@ if (window.location.hostname.endsWith('.aem.page') || window.location.hostname =
       const { resource, prop } = detail || {};
       const data = {};
       
+      // Stop the top-level 404: if they ask for the root container, give them something.
+      if (resource.endsWith('/container')) {
+        data[':type'] = 'container';
+        event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data }, '*');
+        return;
+      }
+
       if (prop) {
         // Fetch specific property
         const el = document.querySelector(`[data-aue-resource="${resource}"] [data-aue-prop="${prop}"], [data-aue-prop="${prop}"]`);
@@ -43,9 +50,6 @@ if (window.location.hostname.endsWith('.aem.page') || window.location.hostname =
             const p = el.getAttribute('data-aue-prop');
             data[p] = el.tagName === 'IMG' ? el.src : el.textContent;
           });
-          // Also check the root itself
-          const rootProp = root.getAttribute('data-aue-prop');
-          if (rootProp) data[rootProp] = root.tagName === 'IMG' ? root.src : root.textContent;
         }
       }
       event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data }, '*');
@@ -166,6 +170,7 @@ export function decorateMain(main) {
     section.setAttribute('data-aue-resource', `urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/section${index}`);
     section.setAttribute('data-aue-type', 'container');
     section.setAttribute('data-aue-label', `Section ${index + 1}`);
+    section.setAttribute('data-aue-model', 'section');
   });
 }
 

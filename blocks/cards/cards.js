@@ -6,6 +6,7 @@ export default function decorate(block) {
   block.setAttribute('data-aue-resource', 'urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/cards');
   block.setAttribute('data-aue-type', 'container');
   block.setAttribute('data-aue-label', 'Cards');
+  block.setAttribute('data-aue-model', 'cards');
   block.setAttribute('data-aue-behavior', 'component');
 
   /* change to ul, li */
@@ -17,6 +18,7 @@ export default function decorate(block) {
     // Instrument each card row as an individual component
     li.setAttribute('data-aue-resource', `urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/cards/item${index}`);
     li.setAttribute('data-aue-type', 'component');
+    li.setAttribute('data-aue-model', 'cards');
     li.setAttribute('data-aue-label', `Card ${index + 1}`);
 
     while (row.firstElementChild) li.append(row.firstElementChild);

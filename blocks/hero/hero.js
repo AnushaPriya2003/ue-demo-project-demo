@@ -3,6 +3,7 @@ export default function decorate(block) {
   block.setAttribute('data-aue-resource', 'urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/hero');
   block.setAttribute('data-aue-type', 'container');
   block.setAttribute('data-aue-label', 'Hero');
+  block.setAttribute('data-aue-model', 'hero');
   block.setAttribute('data-aue-behavior', 'component');
 
   // Instrument individual fields
