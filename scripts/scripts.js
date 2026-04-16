@@ -14,11 +14,123 @@ import {
 
 // Load Universal Editor on .aem.page (preview) and localhost
 if (window.location.hostname.endsWith('.aem.page') || window.location.hostname === 'localhost') {
+<<<<<<< HEAD
   const script = document.createElement('script');
   script.src = '/universal-editor-cors.js';
   document.head.appendChild(script);
 }
 
+=======
+  // Monkey-patch fetch to bypass AEM 404s for the demo
+  const originalFetch = window.fetch;
+  window.fetch = function (...args) {
+    const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+    if (url.includes('jcr:content.json')) {
+      console.log('Mocking UE fetch:', url);
+      return Promise.resolve(new Response(JSON.stringify({
+        ':type': 'container',
+        'jcr:primaryType': 'nt:unstructured',
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }));
+    }
+    return originalFetch.apply(this, args);
+  };
+
+  // Monkey-patch XMLHttpRequest too
+  const originalOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (method, url) {
+    if (typeof url === 'string' && url.includes('jcr:content.json')) {
+      Object.defineProperty(this, 'status', { writable: true });
+      Object.defineProperty(this, 'responseText', { writable: true });
+      Object.defineProperty(this, 'readyState', { writable: true });
+      this.status = 200;
+      this.responseText = JSON.stringify({ ':type': 'container', 'jcr:primaryType': 'nt:unstructured' });
+      this.readyState = 4;
+      this.onreadystatechange?.();
+      this.onload?.();
+      return; 
+    }
+    return originalOpen.apply(this, arguments);
+  };
+
+  const script = document.createElement('script');
+  script.src = '/universal-editor-cors.js';
+  document.head.appendChild(script);
+
+
+  // Mock backend: intercept Universal Editor postMessage events and handle locally
+  // This allows UE editing to work without a real AEM JCR backend.
+  window.addEventListener('message', (event) => {
+    const { type, detail } = event.data || {};
+
+    // Handle content fetch — return current DOM value or specific props
+    if (type === 'ue:get') {
+      const { resource, prop } = detail || {};
+      const data = {};
+      
+      // Stop the top-level 404: if they ask for the root container, give them something.
+      if (resource.endsWith('/container')) {
+        data[':type'] = 'container';
+        event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data }, '*');
+        return;
+      }
+
+      if (prop) {
+        // Fetch specific property
+        const el = document.querySelector(`[data-aue-resource="${resource}"] [data-aue-prop="${prop}"], [data-aue-prop="${prop}"]`);
+        if (el) {
+          data[prop] = el.tagName === 'IMG' ? el.src : el.textContent;
+        }
+      } else {
+        // Fetch all properties for the resource
+        const root = document.querySelector(`[data-aue-resource="${resource}"]`);
+        if (root) {
+          const props = root.querySelectorAll('[data-aue-prop]');
+          props.forEach((el) => {
+            const p = el.getAttribute('data-aue-prop');
+            data[p] = el.tagName === 'IMG' ? el.src : el.textContent;
+          });
+        }
+      }
+      event.source?.postMessage({ type: 'ue:get:response', id: event.data.id, data }, '*');
+    }
+
+    // Handle content update — apply to DOM and confirm success
+    if (type === 'ue:patch' || type === 'aue:content:update') {
+      const { resource, prop, value, detail: innerDetail } = detail || {};
+      const updates = (innerDetail && innerDetail.content) || (detail && detail.content) || [{ prop, value }];
+      
+      updates.forEach((update) => {
+        const p = update.prop;
+        const v = update.value;
+        // Search globally or within the resource
+        const el = document.querySelector(`[data-aue-resource="${resource}"] [data-aue-prop="${p}"], [data-aue-prop="${p}"]`);
+        if (el) {
+          if (el.tagName === 'IMG') {
+            el.src = v;
+          } else if (el.tagName === 'PICTURE') {
+            const img = el.querySelector('img');
+            if (img) img.src = v;
+          } else {
+            el.innerHTML = v; // Use innerHTML for richtext support
+          }
+        }
+      });
+      event.source?.postMessage({ type: 'ue:patch:response', id: event.data.id, status: 'ok' }, '*');
+      event.source?.postMessage({ type: 'aue:content:updated', detail: { resource, prop } }, '*');
+    }
+
+    // Handle connection check
+    if (type === 'ue:ping') {
+      event.source?.postMessage({ type: 'ue:pong', id: event.data.id }, '*');
+    }
+  });
+}
+
+
+>>>>>>> 233eaa86e1485ee628d418949207a30dcd081934
 /**
  * Moves all the attributes from a given elmenet to another given element.
  * @param {Element} from the element to copy attributes from
@@ -84,12 +196,25 @@ function buildAutoBlocks() {
  */
 // eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
+  // --- Universal Editor instrumentation for Page level ---
+  main.setAttribute('data-aue-resource', 'urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container');
+  main.setAttribute('data-aue-type', 'container');
+  main.setAttribute('data-aue-label', 'Main Content');
+
   // hopefully forward compatible button decoration
   decorateButtons(main);
   decorateIcons(main);
   buildAutoBlocks(main);
   decorateSections(main);
   decorateBlocks(main);
+
+  // Instrument each section
+  [...main.querySelectorAll('.section')].forEach((section, index) => {
+    section.setAttribute('data-aue-resource', `urn:aemconnection:/content/ue-demo-project-demo/jcr:content/root/container/section${index}`);
+    section.setAttribute('data-aue-type', 'container');
+    section.setAttribute('data-aue-label', `Section ${index + 1}`);
+    section.setAttribute('data-aue-model', 'section');
+  });
 }
 
 /**

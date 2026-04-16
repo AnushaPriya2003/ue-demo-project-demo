@@ -5,12 +5,17 @@
       "id": "hero",
       "fields": [
         {
+<<<<<<< HEAD
           "component": "text",
+=======
+          "component": "richtext",
+>>>>>>> 233eaa86e1485ee628d418949207a30dcd081934
           "name": "title",
           "label": "Title",
           "valueType": "string"
         },
         {
+<<<<<<< HEAD
           "component": "text",
           "name": "description",
           "label": "Description",
@@ -19,6 +24,15 @@
         },
         {
           "component": "reference",
+=======
+          "component": "richtext",
+          "name": "description",
+          "label": "Description",
+          "valueType": "string"
+        },
+        {
+          "component": "media",
+>>>>>>> 233eaa86e1485ee628d418949207a30dcd081934
           "name": "image",
           "label": "Image",
           "valueType": "string"
@@ -30,16 +44,57 @@
       "id": "cards",
       "fields": [
         {
+<<<<<<< HEAD
           "component": "text",
+=======
+          "component": "richtext",
+>>>>>>> 233eaa86e1485ee628d418949207a30dcd081934
           "name": "title",
           "label": "Card Title",
           "valueType": "string"
         },
         {
+<<<<<<< HEAD
           "component": "text",
           "name": "description",
           "label": "Card Text",
           "valueType": "string"
+=======
+          "component": "richtext",
+          "name": "description",
+          "label": "Card Text",
+          "valueType": "string"
+        },
+        {
+          "component": "media",
+          "name": "image",
+          "label": "Card Image",
+          "valueType": "string"
+        }
+      ]
+    },
+    {
+      "title": "Columns",
+      "id": "columns",
+      "fields": [
+        {
+          "component": "richtext",
+          "name": "title",
+          "label": "Column Title",
+          "valueType": "string"
+        },
+        {
+          "component": "richtext",
+          "name": "description",
+          "label": "Column Text",
+          "valueType": "string"
+        },
+        {
+          "component": "media",
+          "name": "image",
+          "label": "Column Image",
+          "valueType": "string"
+>>>>>>> 233eaa86e1485ee628d418949207a30dcd081934
         }
       ]
     }
